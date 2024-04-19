@@ -3,7 +3,7 @@ package com.atyanidan.service;
 import com.atyanidan.dao.UserRepository;
 import com.atyanidan.dto.AuthenticationRequest;
 import com.atyanidan.dto.AuthenticationResponse;
-import com.atyanidan.entity.User;
+import com.atyanidan.entity.actor.User;
 import com.atyanidan.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,6 +25,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         } else {
             User user = optionalEntity.get();
 
+            System.out.println("user " + user);
+
             smsMessenger.sendSms(user.getPhoneNumber(), request.getOtp());
 
             String userRole = user.getRole().toString();
@@ -34,7 +36,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             return AuthenticationResponse.builder()
                     .token(jwtToken)
-                    .role(userRole)
+                    .user(user)
                     .build();
         }
     }

@@ -5,13 +5,13 @@ USE atya_nidan;
 
 CREATE TABLE IF NOT EXISTS State (
 	state_id int AUTO_INCREMENT,
-    name varchar(100) NOT NULL,
+    name varchar(100) NOT NULL UNIQUE,
     primary key (state_id)
 );
 
 CREATE TABLE IF NOT EXISTS District (
 	district_id int AUTO_INCREMENT,
-    name varchar(100) NOT NULL,
+    name varchar(100) NOT NULL UNIQUE,
     state_id int NOT NULL,
     primary key (district_id)
 );
@@ -21,7 +21,7 @@ ADD FOREIGN KEY (state_id) REFERENCES State(state_id);
 
 CREATE TABLE IF NOT EXISTS Taluka (
 	taluka_id int AUTO_INCREMENT,
-    name varchar(100) NOT NULL,
+    name varchar(100) NOT NULL UNIQUE,
     district_id int NOT NULL,
     primary key (taluka_id)
 );
@@ -148,74 +148,6 @@ ADD FOREIGN KEY (taluka_id) REFERENCES Taluka(taluka_id);
 ALTER TABLE Doctor
 ADD FOREIGN KEY (specialisation_id) REFERENCES Specialisation(specialisation_id);
 
-CREATE TABLE IF NOT EXISTS Patient(
-    patient_id int AUTO_INCREMENT,
-    first_name varchar(100) NOT NULL,
-    middle_name varchar(100),
-    last_name varchar(100) NOT NULL,
-    home_address varchar(100) NOT NULL,
-    phone_number varchar(10) NOT NULL UNIQUE,
-    email varchar(100) NOT NULL UNIQUE,
-    taluka_id int NOT NULL,
-    dob date,
-    blood_group varchar(10),
-    gender ENUM('Male', 'Female', 'Other') NOT NULL,
-    abha_id int NOT NULL, -- What will this refer to?
-    primary key (patient_id)
-);
-
-ALTER TABLE Patient
-ADD FOREIGN KEY (taluka_id) REFERENCES Taluka(taluka_id);
-
-CREATE TABLE IF NOT EXISTS Visit(
-    visit_id int AUTO_INCREMENT,
-    patient_id int NOT NULL,
-    doctor_id int NOT NULL,
-    field_worker_id int NOT NULL,
-    is_follow_up_completed bit,
-    visit_date date,
-    diagnosis_id int,
-    form_title varchar(100),
-    primary key (visit_id)
-);
-
-ALTER TABLE Visit
-ADD FOREIGN KEY (patient_id) REFERENCES Patient(patient_id);
-
-ALTER TABLE Visit
-ADD FOREIGN KEY (doctor_id) REFERENCES Doctor(doctor_id);
-
-ALTER TABLE Visit
-ADD FOREIGN KEY (field_worker_id) REFERENCES Field_Worker(field_worker_id);
-
-CREATE TABLE IF NOT EXISTS Form_Skeleton(
-    form_skeleton_id int AUTO_INCREMENT,
-    title varchar(100) NOT NULL UNIQUE,
-    date_of_creation date NOT NULL,
-    default_form bit default 0,
-    file blob NOT NULL,
-    specialisation_id int NOT NULL,
-    primary key (form_skeleton_id)
-);
-
-ALTER TABLE Form_Skeleton
-ADD FOREIGN KEY (specialisation_id) REFERENCES Specialisation(specialisation_id);
-
-ALTER TABLE Visit
-ADD FOREIGN KEY (form_title) REFERENCES Form_Skeleton(title);
-
-CREATE TABLE IF NOT EXISTS Form_Skeleton_Normal_Values (
-    form_skeleton_normal_values_id int AUTO_INCREMENT,
-    normal_values_id int,
-    form_skeleton_id int,
-    primary key (form_skeleton_normal_values_id, form_skeleton_id, normal_values_id)
-);
-
--- ALTER TABLE Form_Skeleton_Normal_Values ADD FOREIGN KEY (normal_values_id) REFERENCES NormalValues(normalValuesId);
-
-ALTER TABLE Form_Skeleton_Normal_Values
-    ADD FOREIGN KEY (form_skeleton_id) REFERENCES Form_Skeleton(form_skeleton_id);
-
 CREATE TABLE IF NOT EXISTS ICD10_Code (
     code_id int AUTO_INCREMENT,
     code varchar(100) NOT NULL,
@@ -233,16 +165,25 @@ CREATE TABLE IF NOT EXISTS Follow_Up ( -- is a part of diagnosis
     primary key (follow_up_id)
 );
 
-CREATE TABLE Abha_Details(
-    id int,
-    abha_id int NOT NULL UNIQUE,
-    first_name varchar(100) NOT NULL,
-    middle_name varchar(100),
-    last_name varchar(100) NOT NULL,
-    phone_number varchar(10) NOT NULL UNIQUE,
-    email varchar(100) NOT NULL UNIQUE,
-    primary key (id)
+CREATE TABLE Prescription_Response (
+    prescription_response_id int AUTO_INCREMENT,
+    form_id int NOT NULL,
+    patient_id int NOT NULL,
+    fieldworker_id int NOT NULL,
+    doctor_id int NOT NULL,
+    submitted_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    olap_prescription_id varchar(100) NOT NULL UNIQUE,
+    primary key(prescription_response_id)
 );
 
-ALTER TABLE Patient
-ADD FOREIGN KEY (abha_id) REFERENCES Abha_Details(abha_id);
+ALTER TABLE Prescription_Response
+ADD FOREIGN KEY (form_id) REFERENCES Form(form_id);
+
+ALTER TABLE Prescription_Response
+ADD FOREIGN KEY (fieldworker_id) REFERENCES Field_Worker(field_worker_id);
+
+ALTER TABLE Prescription_Response
+ADD FOREIGN KEY (doctor_id) REFERENCES Doctor(doctor_id);
+
+ALTER TABLE Prescription_Response
+ADD FOREIGN KEY (patient_id) REFERENCES Patient(patient_id);

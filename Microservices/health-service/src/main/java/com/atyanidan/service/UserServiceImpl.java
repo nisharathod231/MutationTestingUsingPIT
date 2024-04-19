@@ -2,6 +2,7 @@ package com.atyanidan.service;
 
 import com.atyanidan.dao.UserRepository;
 import com.atyanidan.entity.actor.User;
+import com.atyanidan.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +17,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getUserFromPhoneNumber(String phoneNumber) {
-        return userRepository.findByPhoneNumber(phoneNumber);
+    public User getUserFromEmployeeId(String employeeId) {
+        User user = userRepository.findByEmpId(employeeId);
+        if (user == null) {
+            throw new NotFoundException("User doesn't exist");
+        }
+        return user;
     }
 }
