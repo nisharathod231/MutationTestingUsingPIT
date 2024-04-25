@@ -1,5 +1,5 @@
 {
-  "name": "supervisor",
+  "name": "atyanidan",
   "version": "1.0.0",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
@@ -26,8 +26,10 @@
     "react-native-elements": "^3.4.3",
     "react-native-gesture-handler": "^2.16.0",
     "react-native-image-picker": "^7.1.2",
+    "react-native-table-component": "^1.2.2",
     "react-native-vector-icons": "^10.0.3",
-    "typescript": "^5.1.3"
+    "typescript": "^5.1.3",
+    "expo-sqlite": "~11.3.3"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

@@ -8,15 +8,34 @@ import {
   Image,
   TextInput,
   Alert,
+  SafeAreaView
 } from "react-native";
 import axios from "axios";
 import { API_PATHS } from "../constants/apiConstants";
 import { useAuth } from "../Context/AuthContext";
 import PatientDetails from "./PatientDetails";
-const AddPatient = ({ saveModal }) => {
+import AppHeader from "../components/AppHeader";
+
+const AddPatient = ({ saveModal, doctorId , onRefresh}) => {
   const { authToken } = useAuth();
   const [abhaNumber, setAbhaNumber] = useState(""); // State variable to store ABHA number
   const [navigate, setNavigate] = useState(false);
+  const [patientData, setPatientData] = useState(null); // State to store API response
+
+  // const refreshList = () => {
+  //   axios.get(API_PATHS.GET_LIST_OF_PATIENTS.replace(':DoctorNumber', doctorId), {
+  //     headers: { Authorization: `Bearer ${authToken}` }
+  //   })
+  //   .then(response => {
+  //     setData(response.data);
+  //     console.log("Data refreshed");
+  //   })
+  //   .catch(error => console.error('Error refreshing data:', error));
+  // };
+
+  // useEffect(() => {
+  //   refreshList();  // Initial load and setup refresh mechanism
+  // }, [authToken, doctorId]); 
 
   const handleSubmit = async () => {
     console.log("handleSubmit called"); // Add this line
@@ -31,8 +50,9 @@ const AddPatient = ({ saveModal }) => {
       })
       .then((response) => {
         console.log("Response:", response.data);
-        Alert.alert("Success", "Redirecting...!");
+        // Alert.alert("Success", "Redirecting...!");
         // saveModal();
+        setPatientData(response.data); 
         setNavigate(true);
       })
       .catch((error) => {
@@ -42,19 +62,26 @@ const AddPatient = ({ saveModal }) => {
             "Our Server is down. Please try again later";
           Alert.alert("Error", message);
           setNavigate(true);
-          // saveModal();
+          saveModal();
         } else {
           console.error("Error:", error);
           Alert.alert("Error", "Failed to add Doctor. Please try again later.");
           setNavigate(true);
-          // saveModal();
+          saveModal();
         }
       });
   };
   return (
     <View style={styles.centeredView}>
       {navigate ? (
-        <PatientDetails onBack={() => setNavigate(false)} />
+        <SafeAreaView style={styles.safeArea}>
+        <AppHeader />
+        <PatientDetails patientData={patientData} doctorId={doctorId} onBack={() => {
+          setNavigate(false);
+          saveModal(); // Call saveModal here
+          onRefresh();
+        }} />
+        </SafeAreaView>
       ) : (
         <>
           <View style={styles.modalView}>
@@ -65,12 +92,20 @@ const AddPatient = ({ saveModal }) => {
               value={abhaNumber}
               onChangeText={(text) => setAbhaNumber(text)}
             />
-            <TouchableOpacity
-              style={[styles.button, styles.buttonClose]}
-              onPress={handleSubmit}
-            >
-              <Text style={styles.textStyle}>Add</Text>
-            </TouchableOpacity>
+            <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonClose]}
+                  onPress={handleSubmit}
+                >
+                  <Text style={styles.textStyle}>Add</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonCancel]}
+                  onPress={saveModal}
+                >
+                  <Text style={styles.textStyle}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
           </View>
         </>
       )}
@@ -121,6 +156,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 0,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
+    flexGrow: 1,
+    justifyContent: 'center',
+    width: '100%', 
+    height: '100%',
+    resizeMode: 'cover',
   },
   modalView: {
     margin: 20,
@@ -142,16 +182,12 @@ const styles = StyleSheet.create({
   button: {
     borderRadius: 5,
     padding: 10,
-    width: 200,
+    width: 150,
     elevation: 2,
+    marginHorizontal: 10,
   },
   buttonClose: {
     backgroundColor: "#ADD8E6",
-  },
-  textStyle: {
-    color: "black",
-    fontWeight: "bold",
-    textAlign: "center",
   },
   profileImageModal: {
     width: 250,
@@ -176,6 +212,27 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 10,
     borderRadius: 5,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',  // This will distribute space evenly around the buttons
+    alignItems: 'center',  // Align items vertically
+    marginTop: 10,  // Add margin at the top if necessary
+  },
+
+  buttonCancel: {
+    backgroundColor: "red",  // Example for a different button color
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
+    fontSize: 18,
+  },
+  safeArea: {
+    flex: 1,
+    backgroundColor: "white",
+    width: "100%",
   },
 });
 

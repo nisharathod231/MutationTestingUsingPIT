@@ -3,7 +3,7 @@ import axios from 'axios';
 import { FlatList, View, Text, StyleSheet, Pressable, TouchableOpacity, Modal } from 'react-native';
 import { SearchBar, Icon } from 'react-native-elements';
 import AdminCard from '../components/AdminCard';
-import RadioButton from '../components/RadioButton';
+import RadioButton from '../components/RadioButtonSA';
 import { API_PATHS } from '../constants/apiConstants';
 import { useAuth } from '../Context/AuthContext'; 
 
@@ -67,21 +67,7 @@ const AdminScreen = ({ navigation, stateId }) => {
       </Pressable>
     )
   };
-  // useEffect(() => {
-  //   // Make API call on component mount
-  //   // axios.get('https://459e-119-161-98-68.ngrok-free.app/atyanidan/health/api/districts/1/doctors')
-  //   const getdoclist = API_PATHS.GET_DOCTORS_BY_DISTRICTS.replace(':districtId', 1)
-  //   axios.get(getdoclist)
-  //     .then(response => {
-  //       // Update state with API data
-  //       console.log("response", response);
-  //       setData(response.data);
-  //       setSelectedUser(response.data[0]);
-  //     })
-  //     .catch(error => {
-  //       console.error('Error fetching data:', error);
-  //     });
-  // }, []);
+
 
   useEffect(() => {
     const getadminlist = API_PATHS.GET_ADMINS_BY_STATES.replace(':stateId', stateId)
