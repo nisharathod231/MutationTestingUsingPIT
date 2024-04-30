@@ -8,6 +8,8 @@ import { ClerkProvider, SignedIn, SignedOut, useAuth } from "@clerk/clerk-expo";
 import { StatusBar } from 'expo-status-bar';
 import TabNavigation from './App/Navigation/TabNavigation';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import StatsScreen from './App/Screens/StatsScreen/StatsScreen';
+import DoctorsList from './App/Screens/DoctorsList/DoctorsList';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -78,7 +80,7 @@ export default function App() {
             </View>
           </SignedIn>
           <SignedOut>
-            <LoginScreen />
+            <DoctorsList/>
           </SignedOut>
           <StatusBar style='dark' />
         </View>
