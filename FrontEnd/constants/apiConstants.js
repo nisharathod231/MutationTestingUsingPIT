@@ -17,12 +17,14 @@ export const API_PATHS = {
     POST_AUTH_TOKEN_IN_LOGIN: `${BASE_URL}/${AUTH_BASE_PATH}/authenticate`,
     PUT_FIELDWORKER_ASSIGN: `${BASE_URL}/${HEALTH_BASE_PATH}/fieldworkers/:fieldworkerId`,
     GET_ADMINS_BY_STATES: `${BASE_URL}/${HEALTH_BASE_PATH}/states/:stateId/admins`,
+    GET_STATS_FOR_ADMIN: `${BASE_URL}/${HEALTH_BASE_PATH}/stats/districts/:districtId`,
 
     //Super admin
     GET_FORMS_LIST: `${BASE_URL}/${FORM_BASE_PATH}/forms`,
     GET_FORM_CARD_DETAILS: `${BASE_URL}/${FORM_BASE_PATH}/form-definitions/:form-definition-id`,
     PUT_FORM_DEFAULT: `${BASE_URL}/${FORM_BASE_PATH}/forms/default/:formId`,
     POST_FORM_SKELETON: `${BASE_URL}/${FORM_BASE_PATH}/forms`,
+    GET_STATS_FOR_SUPERADMIN: `${BASE_URL}/${HEALTH_BASE_PATH}/stats/states/:stateId`,
 
     //Doctor
     GET_PATIENTID_OF_PATIENT: `${BASE_URL}/${HEALTH_BASE_PATH}/patients/:patientNumber/demographics`,
@@ -31,10 +33,11 @@ export const API_PATHS = {
     GET_ICDCODE_LIST: `${BASE_URL}/${HEALTH_BASE_PATH}/icd10Codes`,
     POST_PRESCRIPTION_RESPONSE: `${BASE_URL}/${HEALTH_BASE_PATH}/prescription-responses`, 
     GET_LIST_OF_PATIENTS: `${BASE_URL}/${HEALTH_BASE_PATH}/doctors/:DoctorNumber/patients`,
-    GET_PDFS_OF_FORMS_AND_PRESCRIPTIONS: `${BASE_URL}/${HEALTH_BASE_PATH}/pdfwriter/33`,
+    GET_PDFS_OF_FORMS_AND_PRESCRIPTIONS: `${BASE_URL}/${HEALTH_BASE_PATH}/pdfwriter/:pdfStorageId`,
     
     //Field worker
     GET_USER_ALL_DETAILS: `${BASE_URL}/${HEALTH_BASE_PATH}/fieldworkers/:fieldworkerNumber/followups`,
     GET_DOCTOR_RECOMMENDATION: `${BASE_URL}/${HEALTH_BASE_PATH}/doctors/specialisations/:specialisationId/talukas/:talukaId`,
     GET_FORMS_FOR_PATIENTS: `${BASE_URL}/${FORM_BASE_PATH}/forms/form-definitions`,
+    POST_SYNC_FW_SCREEN: `${BASE_URL}/${FORM_BASE_PATH}/form-responses`
 };

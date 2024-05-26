@@ -1,123 +1,261 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FlatList, View, Text, StyleSheet, Pressable, TouchableOpacity, Modal } from 'react-native';
+import { FlatList, View, Text, StyleSheet, Pressable, TouchableOpacity, Modal, Alert } from 'react-native';
 import { SearchBar, Icon } from 'react-native-elements';
-import PatientCardFW from '../components/PatientCardFW';
+// import PatientCardFW from '../AddFollowup/PatientDetailsFW';
+import AddPatientDefaultForm from '../AddFollowup/AddPatientDefaultForm';
 import { API_PATHS } from '../constants/apiConstants';
 import { useAuth } from '../Context/AuthContext';
+import { db } from '../Database/database';
+import PatientDetailsFW from '../AddFollowup/PatientDetailsFW';
+import FieldWorkerContainer from '../FieldWorkerContainer';
+import FieldWorkerCard from '../components/FieldWorkerCard';
 
 const TableHeader = () => (
   <View style={styles.tableRow}>
-    <Text style={[styles.tableCell, { flex: 1 }, { fontWeight: 'bold' }]}>ID</Text>
+    <Text style={[styles.tableCell, { flex: 2 }, { fontWeight: 'bold' }]}>ID</Text>
     <Text style={[styles.tableCell, { flex: 3 }, { fontWeight: 'bold' }]}>Name</Text>
     <Text style={[styles.tableCell, { flex: 2 }, { fontWeight: 'bold' }]}>Disease</Text>
     <Text style={[styles.tableCell, { flex: 2 }, { fontWeight: 'bold' }]}>FollowUp</Text>
   </View>
 );
-export default FollowupScreen = () => {
+export default FollowupScreen = ({ user }) => {
   const { authToken } = useAuth();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [data, setData] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
   const [filteredData, setFilteredData] = useState([]);
+  const [navigate, setNavigate] = useState(false);
+  const [apiData, setApiData] = useState(null);
+  const [formType, setFormType] = useState('');
+  const [sync , setSync] = useState(false);
+
+
+  useEffect(() => {
+    // Handle the transition or action once sync is completed
+    if (sync) {
+      handlePostSyncActions(); // Implement this function to handle actions after sync
+    }
+  }, [sync]);
+
+  useEffect(() => {
+    const fetchDataDemographic = async () => {
+      console.log("in");
+      try {
+        db.transaction((tx) => {
+          tx.executeSql(
+            'SELECT * FROM demographics',
+            [],
+            (_, result) => { // Corrected to include the transaction object "_"
+              console.log("inside results"); // Now this should correctly log
+              const fetchedData = result.rows._array;
+              console.log('_______________________________________________');    
+              console.log("Fetched Data: ", fetchedData);
+              if (fetchedData.length > 0) {
+                setData(fetchedData); // Assuming you want the first match or there's only one match
+              } else {
+                console.log('No data demographic');
+              }
+            },
+            (_, err) => {
+              console.log('Failed to fetch selected user data from demographics table:', err);
+            }
+          );
+        });
+      } catch (error) {
+        console.error("Error fetching demographic details:", error);
+        alert('Failed to fetch demographic details.');
+      }
+    };
+    fetchDataDemographic();
+  }, []);
+  
 
   const handleSearch = (text) => {
+    setSearchQuery(text);
     const filteredSearchData = data.filter((item) => 
-    item.firstName.toLowerCase().includes(text.toLowerCase()))
-   setSearchQuery(text);
+      item.firstName.toLowerCase().includes(text.toLowerCase())
+    );
     setFilteredData(filteredSearchData);
+  };
 
-};
+  const fetchDataFromDatabase = async () => {
+    return new Promise((resolve, reject) => {
+      db.transaction(tx => {
+        tx.executeSql(
+          'SELECT * FROM formResponseforPatient;',
+          [],
+          (_, { rows }) => resolve(rows._array),
+          (_, error) => reject(error)
+        );
+      });
+    });
+  };
 
-const showModal = () => {
-  console.log("Show Modal");
-  setIsModalVisible(true);
-};
+  const transformData = (data) => {
+    return data.map(item => ({
+      formId: item.formId,
+      fieldWorkerId: item.fwNumber,
+      patientIdNumber: item.formType === "Regular" ? item.aabhaNumber :  item.pNumber,
+      fields: {
+        firstName: item.fName,
+        lastName: item.lName,
+        address: item.address,
+        phoneNumber: item.phoneNumber,
+        taluka: item.talukaName,
+        age: item.age,
+        unhealthy: item.unhealthy === 1,
+        gender: item.gender,
+        bloodGroup: item.bloodGroup
+      },
+      questions: JSON.parse(item.responseList),
+      formType: item.formType
+    }));
+  };
+
+  const sendFormData = async (formattedData) => {
+    console.log("sendFormData called!");
+    const url = API_PATHS.POST_SYNC_FW_SCREEN;
+    try {
+      const response = await axios.post(url, formattedData, {
+        headers: {
+          Authorization: `Bearer ${authToken}`, // Replace authToken with your actual token variable
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log("____________________Jai mata di_______________________");
+      console.log('POST response:', response.data);
+      Alert.alert('Success', 'Data sent successfully!');
+      // setSync(true)
+    } catch (error) {
+      console.error('Error sending form data:', error);
+      if (error.response) {
+        Alert.alert('Error', error.response.data.message);
+      } else {
+        Alert.alert('Error', 'Failed to send data. Please try again later.');
+      }
+    }
+  };
+  
+
+  const handleSync = async () => {
+    try {
+      const rawData = await fetchDataFromDatabase();
+      console.log("____________________Jai mata di_______________________");
+      console.log("RAW DATA",rawData);
+      const formattedData = transformData(rawData);
+      console.log("____________________Jai mata di_______________________");
+      console.log("FORMATTED DATA",formattedData);
+      setSync(true); // Set sync true only if data send is successful
+      await sendFormData(formattedData);
+    } catch (error) {
+      console.error('Sync error:', error);
+      Alert.alert('Error', 'Failed to sync data.');
+    }
+  };
+  
+  const handlePostSyncActions = () => {
+    // Perform the API fetches or navigation
+    // After actions are completed, reset sync
+    <FieldWorkerContainer authToken={authToken} user={user} />
+    setSync(false);
+  };
+
+  const showModal = () => {
+    console.log("Show Modal");
+    setIsModalVisible(true);
+  };
+
+  const saveModal = () => {
+    console.log("Save Modal");
+    setIsModalVisible(false);
+  };
+
+  const onSelectUser = (item) => {
+    if (item.patientNumber) {
+      // If the same item is clicked, force the useEffect to run
+    //   setForceUpdate(prev => prev + 1);  // Increment to force re-render
+    // } else {
+      setSelectedUser(item.patientNumber);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (selectedUser) {
+        console.log("selected user" , selectedUser);
+        try {
+          db.transaction((tx) => {
+            tx.executeSql(
+              'SELECT * FROM demographics WHERE patientNumber = ?',
+              [selectedUser], // Bind the selectedUser value to the query
+              (_, result) => {
+                // Extract rows from the result
+               
+                console.log("Result" , result);
+                const fetchedData = result.rows._array;
+                console.log("array" , fetchedData);
+                if (result.rows.length > 0) {
+                  console.log("fetchedData" , fetchedData);
+                  setApiData(fetchedData); // Assuming you want the first match or there's only one match
+                  setNavigate(true);
+                } else {
+                  console.log('No data found for the selected user');
+                  setNavigate(false);
+                }
+              },
+              (_, err) => {
+                console.log('Failed to fetch selected user data from demographics table:', err);
+              }
+            );
+          });
+        } catch (error) {
+          console.error("Error fetching selected user details:", error);
+          alert('Failed to fetch patient details.');
+        }
+      }
+    };
+    fetchData();
+  }, [selectedUser]);
+  
+  
+
+  if (navigate && apiData) {
+    // Navigate to PatientDetailsFW component
+    return (
+      <PatientDetailsFW 
+        patientData={apiData} 
+        fwId = {user.empId}
+        talukaName = {user.taluka.name}
+        onBack={() => {
+          setFormType('new');
+          setNavigate(false);  // Go back to list
+          setSelectedUser(null);
+          saveModal();
+        }} 
+      />
+    );
+  }
+
   const TableRow = ({ item }) => {
     const name = `${item.firstName}${item.middleName ? ' ' + item.middleName : ''} ${item.lastName}`;
+    const followUpStyle = item.fieldworkerFollowUpType === 'Today' 
+                        ? styles.followUpToday 
+                        : item.fieldworkerFollowUpType === 'Pending' 
+                        ? styles.followUpPending 
+                        : {}; // Default style if needed
     return (
-      <Pressable onPress={() => setSelectedUser(item)}>
+      <Pressable onPress={() => onSelectUser(item)}>
         <View style={styles.tableRow}>
-          <Text style={[styles.tableCell, { flex: 1 }]}>{item.id}</Text>
+          <Text style={[styles.tableCell, { flex: 2 }]}>{item.patientNumber}</Text>
           <Text style={[styles.tableCell, { flex: 3 }]}>{name}</Text>
-          <Text style={[styles.tableCell, { flex: 2 }]}>{item.disease}</Text>
-          <Text style={[styles.tableCell, { flex: 2 }]}>{item.followUp}</Text>
+          <Text style={[styles.tableCell, { flex: 2 }]}>{item.formTitle}</Text>
+          <Text style={[styles.tableCell, { flex: 2 }, followUpStyle]}>{item.currentFollowUpDate}</Text>
         </View>
       </Pressable>
     )
   };
-
-//   useEffect(() => {
-//     const fetchData = async () => {
-//       try {
-//         console.log("Inside get API");
-  
-//         // Check network connectivity
-//         const netInfoState = await NetInfo.fetch();
-//         if (netInfoState.isConnected) {
-//           // If online, make API call
-//           console.log("Inside is connected")
-//           const response = await axios.get("http://10.0.2.2:3000/patientDetails");
-//           const newData = response.data;
-  
-//           // Update state with new data
-//           setData(newData);
-//           setSelectedUser(newData[0]);
-  
-//           // Store new data in AsyncStorage
-//           await AsyncStorage.setItem('patientDetails', JSON.stringify(newData));
-//         } else {
-//            console.log("Inside else connected")
-//           // If offline, fetch data from AsyncStorage
-//           const storedData = await AsyncStorage.getItem('patientDetails');
-//           console.log("@111 storedData" , storedData);
-//           if (storedData) {
-//             setData(JSON.parse(storedData));
-//             setSelectedUser(JSON.parse(storedData)[0]);
-//           }
-//         }
-//       } catch (error) {
-//         console.error('Error:', error);
-//       }
-//     };
-  
-//     // Call fetchData on initial render
-//     fetchData();
-  
-//     // Subscribe to network state changes and fetch data accordingly
-//     const unsubscribe = NetInfo.addEventListener(state => {
-//       if (state.isConnected) {
-//         fetchData(); // Fetch data if online
-//       }
-//     });
-  
-//     // Clean up subscription on component unmount
-//     return () => {
-//       unsubscribe();
-//     };
-//   }, []);
-
-// useEffect(() => {
-//     console.log("Inside Followups get");
-//     const getfollowuplist = API_PATHS.GET_FIELDWORKERS_BY_DISTRICTS.replace(':districtId', districtId)
-//     axios.get(getfollowuplist, {
-//       headers: {
-//         Authorization: `Bearer ${authToken}` 
-//       }
-//     })
-//     .then(response => {
-
-//       // console.log("response", response);
-//       // console.log("response.data", response.data);
-  
-//       setData(response.data);
-//       setSelectedUser(response.data[0]);      
-//     })
-//     .catch(error => {
-//       console.error('Error fetching data:', error);
-//     });
-//   }, [authToken]);
 
 
   return (
@@ -157,11 +295,17 @@ const showModal = () => {
               searchIcon={{ size: 24 }} // Style for the search icon
               clearIcon={{ size: 24 }} // Style for the clear icon
             />
+            
             <TouchableOpacity onPress={showModal}>
               <View style={styles.circle}>
                 <Icon name="plus" type="font-awesome" color="black" />
               </View>
             </TouchableOpacity>
+            {/* <View style={styles.buttonsContainer}>
+            <TouchableOpacity style={styles.syncbutton} onPress={handleSync}>
+              <Text style={styles.backbuttonText}>Sync</Text>
+            </TouchableOpacity>
+          </View> */}
           </View>
         </View>
         <View style={styles.flatlist}>
@@ -169,17 +313,23 @@ const showModal = () => {
             data={searchQuery ? filteredData : data}
             ListHeaderComponent={<TableHeader />}
             renderItem={({ item }) => <TableRow item={item} />}
-            keyExtractor={item => item.id.toString()}
+            keyExtractor={item => item.id}
             showsVerticalScrollIndicator={false}
           />
         </View>
       </View>
       <View style={styles.card}>
-        {selectedUser && <PatientCardFW user={selectedUser} />}
-      </View>
+          <FieldWorkerCard user={user} />
+          <View style={styles.buttonsContainer}>
+            <TouchableOpacity style={styles.syncbutton} onPress={handleSync}>
+              <Text style={styles.backbuttonText}>Sync</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       {/* Modal */}
       <Modal visible={isModalVisible} transparent animationType="slide">
-        <View><Text>Hello</Text></View>
+      <AddPatientDefaultForm saveModal={saveModal} formType={formType} setFormType={setFormType} fwId = {user.empId} talukaName = {user.taluka.name}
+/>
       </Modal>
     </View>
     </View>
@@ -203,13 +353,17 @@ const styles = StyleSheet.create({
     marginEnd: 30,
   },
   tableCell: {
-    textAlign: 'center',
+    textAlign: 'left',
     fontSize: 18,
     fontStyle: 'bold',
+    justifyContent: 'center',
   },
   flatlist: {
     marginTop: 0,
     flex: 2,
+    backgroundColor: 'white',
+    marginRight: 20,
+    marginLeft:20
   },
   list: {
     flex: 0.55,
@@ -230,5 +384,32 @@ const styles = StyleSheet.create({
   },
   header: {
     flex : 0.1,
+  },
+  buttonsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between", // Distribute buttons horizontally
+    paddingHorizontal: 30, // Add space on both sides of the container
+    marginTop: 20,
+  },
+  syncbutton: {
+    flex: 1, // Make buttons occupy equal width
+    paddingHorizontal: 15, // Add horizontal space between buttons and text
+    backgroundColor: "#FFA62B",
+    borderRadius: 5, // Maintain button corner rounding
+    borderWidth: 1,
+    alignItems: "center",
+    marginHorizontal: 20, // Add space between buttons (margin on each side)
+    height: 40,
+  },
+  backbuttonText: {
+    color: "black",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  followUpToday: {
+    color: 'green',
+  },
+  followUpPending: {
+    color: 'red',
   },
 });
