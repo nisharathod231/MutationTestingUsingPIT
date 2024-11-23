@@ -5,7 +5,6 @@ import com.atyanidan.entity.mysql.FormResponse;
 import com.atyanidan.request.OlapFormRequest;
 import com.atyanidan.response.FormNameTimestampResponse;
 import com.atyanidan.service.FormResponseService;
-import com.itextpdf.text.DocumentException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +25,7 @@ public class FormResponseController {
     }
 
     @PostMapping
-    public ResponseEntity<List<OlapForm>> addForm(@RequestBody List<OlapFormRequest> olapFormRequests) throws DocumentException {
+    public ResponseEntity<List<OlapForm>> addForm(@RequestBody List<OlapFormRequest> olapFormRequests)  {
         System.out.println(olapFormRequests);
         List<OlapForm> olapForms = new ArrayList<>();
         for (OlapFormRequest olapFormRequest : olapFormRequests) {

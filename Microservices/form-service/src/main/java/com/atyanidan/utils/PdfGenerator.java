@@ -4,7 +4,6 @@ import com.atyanidan.entity.mysql.FieldWorker;
 import com.atyanidan.entity.mysql.Form;
 import com.atyanidan.entity.mysql.FormType;
 import com.atyanidan.entity.mysql.Patient;
-import com.itextpdf.text.DocumentException;
 import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
@@ -13,7 +12,7 @@ import java.util.Map;
 
 @Component
 public class PdfGenerator {
-    public String generateFormPdf(Form form, FieldWorker fieldworker, Patient patient, Boolean isHealthy, Map<String, Object> questions, FormType formType) throws DocumentException {
+    public String generateFormPdf(Form form, FieldWorker fieldworker, Patient patient, Boolean isHealthy, Map<String, Object> questions, FormType formType) {
         String healthStatus = isHealthy ? "unhealthy" : "healthy";
 
         StringBuilder sb = new StringBuilder();

@@ -8,7 +8,6 @@ import com.atyanidan.request.OlapFormRequest;
 import com.atyanidan.response.FormNameTimestampResponse;
 import com.atyanidan.utils.IdGenerator;
 import com.atyanidan.utils.PdfGenerator;
-import com.itextpdf.text.DocumentException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -55,7 +54,7 @@ public class FormResponseServiceImpl implements FormResponseService {
         this.userService = userService;
     }
 
-    public OlapForm createFormResponse(OlapFormRequest olapFormRequest) throws DocumentException {
+    public OlapForm createFormResponse(OlapFormRequest olapFormRequest) {
         System.out.println(olapFormRequest);
         FieldWorker fieldWorker = (FieldWorker) userService.getUserFromEmployeeId(olapFormRequest.getFieldWorkerId());
 
